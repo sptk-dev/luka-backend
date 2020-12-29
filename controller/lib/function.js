@@ -167,7 +167,7 @@ function fa_getNotiList(data) {
   return new Promise((resolve, reject) => {
     try {
       var sql =
-        " SELECT logs.uid AS loguid , * logs.uid AS loguid , *  FROM pushnotifylog   AS logs " +
+        " SELECT logs.uid AS loguid , *   FROM pushnotifylog   AS logs " +
         "LEFT JOIN msrefrigerator AS mac ON  logs.macid = mac.code  AND logs.msorganisationuid = mac.msorganisationuid " +
         "WHERE " +
         "logs.deviceid = '" +
