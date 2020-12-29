@@ -154,7 +154,6 @@ function await_load_suffix_ng() {
   });
 }
 
-
 /* -----------------------------  */
 /* -----------------------------  */
 /* -----------------------------  */
@@ -164,17 +163,21 @@ module.exports.getNotiList = async function getNotiList(data) {
   return resp;
 };
 
-
 function fa_getNotiList(data) {
   return new Promise((resolve, reject) => {
     try {
-      var sql =" SELECT * FROM pushnotifylog   AS logs "+
-      "LEFT JOIN msrefrigerator AS mac ON  logs.macid = mac.code  AND logs.msorganisationuid = mac.msorganisationuid "+
-      "WHERE "+
-      "logs.deviceid = '"+data.deviceToken+"' "+
-      "AND "+
-      "logs.userid = '"+data.uid+"' "+
-      "order by logs.uid desc LIMIT 10";
+      var sql =
+        " SELECT logs.uid AS loguid , * logs.uid AS loguid , *  FROM pushnotifylog   AS logs " +
+        "LEFT JOIN msrefrigerator AS mac ON  logs.macid = mac.code  AND logs.msorganisationuid = mac.msorganisationuid " +
+        "WHERE " +
+        "logs.deviceid = '" +
+        data.deviceToken +
+        "' " +
+        "AND " +
+        "logs.userid = '" +
+        data.uid +
+        "' " +
+        "order by logs.uid desc LIMIT 10";
       console.log(sql);
       db.executePG_global(sql, function (rs_dat, err) {
         console.log("xx", rs_dat);
@@ -197,25 +200,52 @@ function fa_getNotiList(data) {
   });
 }
 
-
 /* -----------------------------  */
 /* -----------------------------  */
 /* -----------------------------  */
 
 module.exports.saveuserlog = async function saveuserlog(data) {
   const chk_user_online = await fa_checkuseronline(data);
-  var resp = null ;
-  if(chk_user_online.ok == true){
-    // const  fa_updatelog = await fa_log_updatelog(chk_user_online.data[0]);
-    // resp  =  fa_updatelog
-  }else{
-    const  fa_createlog = await fa_log_createlog(data);
-    resp  =  fa_createlog
+  if(data.type == "login"){
+    var resp = null;
+    if (chk_user_online.ok == true) {
+      resp = { ok: true, message: "User is Online" };
+    } else {
+      const fa_createlog = await fa_log_createlog(data);
+      resp = fa_createlog;
+    }
+  }else if(data.type == "logout"){
+      const fa_createlog = await fa_logout_createlog(data,chk_user_online.data[0]);
+      resp = fa_createlog;
   }
+ 
   return resp;
 };
 
 
+function fa_logout_createlog(data , uonline) {
+  return new Promise((resolve, reject) => {
+    try {
+      var sql =
+        "  update loginlog set statuslogin = 'Offline' mwhen =  CURRENT_TIMESTAMP " +
+        " where uid = '"+uonline.uid+"' and useruid = '"+data.uid+"' "+
+        " and platfrom = '"+data.pfid+"' and deviceid='"+data.token+"'";
+      console.log(sql);
+      db.executePG_global(sql, function (rs_dat, err) {
+        if (err) {
+          let resp = { ok: false, message: err };
+          resolve(resp);
+        } else {
+          let resp = { ok: true, message: "success", data: rs_dat };
+          resolve(resp);
+        }
+      });
+    } catch (eror) {
+      let resp = { ok: false, message: error.message };
+      resolve(resp);
+    }
+  });
+}
 
 function fa_log_createlog(data) {
   return new Promise((resolve, reject) => {
@@ -223,15 +253,18 @@ function fa_log_createlog(data) {
       // " SELECT * FROM loginlog WHERE useruid = '"+data.uid+"' AND deviceid = '"+data.token+"' "+
       // " AND platfrom = '"+data.pfid+"' and statuslogin = 'Online' and fromapp='LUKA'  ";
       var sql =
-        " insert into loginlog(useruid,deviceid,platfrom,statuslogin,fromapp,cwhen)  "+ 
-        " VALUES('"+data.uid+"','"+data.token+"','"+data.pfid+"','Online','LUKA',CURRENT_TIMESTAMP" 
+        " insert into loginlog(useruid,deviceid,platfrom,statuslogin,fromapp,cwhen)  " +
+        " VALUES('" +
+        data.uid +
+        "','" +
+        data.token +
+        "','" +
+        data.pfid +
+        "','Online','LUKA',CURRENT_TIMESTAMP)";
       console.log(sql);
       db.executePG_global(sql, function (rs_dat, err) {
         if (err) {
           let resp = { ok: false, message: err };
-          resolve(resp);
-        } else if (rs_dat.length == 0) {
-          let resp = { ok: false, message: "no data" };
           resolve(resp);
         } else {
           let resp = { ok: true, message: "success", data: rs_dat };
@@ -245,15 +278,11 @@ function fa_log_createlog(data) {
   });
 }
 
-
-
 function fa_log_updatelog(data) {
   return new Promise((resolve, reject) => {
     try {
-      
       resolve(data.uid);
-      var sql =
-        "  ";
+      var sql = "  ";
       console.log(sql);
       db.executePG_global(sql, function (rs_dat, err) {
         if (err) {
@@ -274,14 +303,19 @@ function fa_log_updatelog(data) {
     }
   });
 }
-
 
 function fa_checkuseronline(data) {
   return new Promise((resolve, reject) => {
     try {
       var sql =
-        " SELECT * FROM loginlog WHERE useruid = '"+data.uid+"' AND deviceid = '"+data.token+"' "+
-        " AND platfrom = '"+data.pfid+"' and statuslogin = 'Online' and fromapp='LUKA'  ";
+        " SELECT * FROM loginlog WHERE useruid = '" +
+        data.uid +
+        "' AND deviceid = '" +
+        data.token +
+        "' " +
+        " AND platfrom = '" +
+        data.pfid +
+        "' and statuslogin = 'Online' and fromapp='LUKA'  ";
       console.log(sql);
       db.executePG_global(sql, function (rs_dat, err) {
         if (err) {
@@ -302,7 +336,6 @@ function fa_checkuseronline(data) {
     }
   });
 }
-
 
 /* -----------------------------  */
 /* -----------------------------  */
