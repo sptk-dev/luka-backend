@@ -169,12 +169,7 @@ function fa_getNotiList(data) {
       var sql =
         " SELECT logs.uid AS loguid , *   FROM pushnotifylog   AS logs " +
         "LEFT JOIN msrefrigerator AS mac ON  logs.macid = mac.code  AND logs.msorganisationuid = mac.msorganisationuid " +
-        "WHERE " +
-        "logs.deviceid = '" +
-        data.deviceToken +
-        "' " +
-        "AND " +
-        "logs.userid = '" +
+        "WHERE logs.userid = '" +
         data.uid +
         "' " +
         "order by logs.uid desc LIMIT 10";
